@@ -12,9 +12,9 @@ The ability to tune channels was [obviously] a dependency of another project
 written in Python. I put a significant amount effort into calling the standard 
 dvb-apps by invoking them as external processes in a separate thread, but I 
 kept having critical issues reading the output using the "subprocess" module. 
-This was most likely due to a bug that I was missing, but it the choice to 
+This was most likely due to a bug that I was missing, but the choice to 
 refactor dvb-apps into a set of libraries, although higher risk, was obviously
-going to produce a more-efficient solution.
+going to both work and produce a far more efficient solution.
 
 As the original utilities had also made design decisions that weren't of use to
 me, it also afforded me the chance to make different decisions, as long as I
