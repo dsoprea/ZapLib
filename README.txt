@@ -52,6 +52,15 @@ of the following:
 
     azaplib.o
     czaplib.o
-    szaplib.o
+    szaplib.o (which also requires lnb.o)
     tzaplib.o
+
+Comments
+========
+
+I do not do any handling of CTRL-BREAK. Although I usually make calls to this 
+library from Python, I believe it's simply that something clears the signal 
+handlers during the execution of this library, which prevents the user from 
+being able to break.
+
 

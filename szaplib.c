@@ -310,7 +310,7 @@ static int read_channels(t_tuner_descriptor tuner, t_dvbs_tune_info tune_info,
     vpid = (tune_info.vpid ? tune_info.vpid : 0x1fff);
     apid = (tune_info.apid ? tune_info.apid : 0x1fff);
 
-	return zap_to(tuner, tune_info.sat_no, tune_info.freq * 1000, 
+	return zap_to(tuner, tune_info.sat_no, tune_info.frequency * 1000, 
 	              tune_info.pol, tune_info.sr, vpid, apid, tune_info.sid, dvr, 
 	              rec_psi, bypass, interval_us, statusReceiver);
 }

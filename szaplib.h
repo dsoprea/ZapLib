@@ -5,7 +5,7 @@
 
 typedef struct
 {
-   unsigned int freq;
+   unsigned int frequency;
    unsigned int pol;
    unsigned int sat_no;
    unsigned int sr;
