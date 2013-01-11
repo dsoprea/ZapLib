@@ -19,16 +19,16 @@ ZAPLIB_SO_INSTALLPATH=$(INSTALL_PATH)/$(ZAPLIB_SO_NAME)
 CC=gcc
 CFLAGS=-g -Wall -Werror 
 
-all: $(OUTPUT_PATH)/zaplib.so
+all: $(OUTPUT_PATH)/$(ZAPLIB_SO_NAME)
 
-$(OUTPUT_PATH)/zaplib.so: $(OUTPUT_PATH)/azaplib.o $(OUTPUT_PATH)/czaplib.o \
-           $(OUTPUT_PATH)/szaplib.o $(OUTPUT_PATH)/lnb.o \
-           $(OUTPUT_PATH)/tzaplib.o $(OUTPUT_PATH)/util.o
-	$(CC) -shared $(CFLAGS) -Wl,-soname,libzaplib.so.1 \
-	      -o $(OUTPUT_PATH)/libzaplib.so.1 \
-	      $(OUTPUT_PATH)/azaplib.o $(OUTPUT_PATH)/czaplib.o \
-	      $(OUTPUT_PATH)/szaplib.o $(OUTPUT_PATH)/lnb.o $(OUTPUT_PATH)/tzaplib.o \
-	      $(OUTPUT_PATH)/util.o
+$(OUTPUT_PATH)/$(ZAPLIB_SO_NAME): $(OUTPUT_PATH)/azaplib.o $(OUTPUT_PATH)/czaplib.o \
+		$(OUTPUT_PATH)/szaplib.o $(OUTPUT_PATH)/lnb.o \
+		$(OUTPUT_PATH)/tzaplib.o $(OUTPUT_PATH)/util.o
+	$(CC) -shared $(CFLAGS) -Wl,-soname,$(ZAPLIB_SO_NAME) \
+		-o $(OUTPUT_PATH)/$(ZAPLIB_SO_NAME) \
+		$(OUTPUT_PATH)/azaplib.o $(OUTPUT_PATH)/czaplib.o \
+		$(OUTPUT_PATH)/szaplib.o $(OUTPUT_PATH)/lnb.o $(OUTPUT_PATH)/tzaplib.o \
+		$(OUTPUT_PATH)/util.o
 
 $(OUTPUT_PATH)/azaplib.o: $(SRC_PATH)/azaplib.c
 	$(CC) -c -fpic $(CFLAGS) -o $(OUTPUT_PATH)/azaplib.o $(SRC_PATH)/azaplib.c
