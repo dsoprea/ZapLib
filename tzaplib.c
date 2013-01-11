@@ -23,6 +23,8 @@
 static char FRONTEND_DEV [80];
 static char DEMUX_DEV [80];
 
+int tzap_break_tune = 0;
+
 static int check_fec(fe_code_rate_t *fec)
 {
 	switch (*fec)
@@ -257,25 +259,34 @@ int setup_frontend (int fe_fd, struct dvb_frontend_parameters *frontend)
 	return 0;
 }
 
+static void handleSigint()
+{
+    tzap_break_tune = 1;
+}
+
 static
 int check_frontend(int fe_fd, const int interval_us, 
                    StatusReceiver statusReceiver)
 {
 	fe_status_t status;
-    uint16_t snr, signal;
+    uint16_t snr, signal_strength;
     uint32_t ber, uncorrected_blocks;
     int is_locked;
 
-	while(1) {
+    // We use SIGINT out of convenience, for whether we're testing tuning by 
+    // handle, or need to interrupt it from another thread.
+    signal(SIGINT, handleSigint);
+
+	while(tzap_break_tune == 0) {
 	    ioctl(fe_fd, FE_READ_STATUS, &status);
-	    ioctl(fe_fd, FE_READ_SIGNAL_STRENGTH, &signal);
+	    ioctl(fe_fd, FE_READ_SIGNAL_STRENGTH, &signal_strength);
 	    ioctl(fe_fd, FE_READ_SNR, &snr);
 	    ioctl(fe_fd, FE_READ_BER, &ber);
 	    ioctl(fe_fd, FE_READ_UNCORRECTED_BLOCKS, &uncorrected_blocks);
 
         is_locked = (status & FE_HAS_LOCK) > 0;
 
-		if(statusReceiver(status, signal, snr, ber, uncorrected_blocks, 
+		if(statusReceiver(status, signal_strength, snr, ber, uncorrected_blocks, 
 		                  is_locked) == 0)
             break;
 

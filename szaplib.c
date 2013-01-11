@@ -40,6 +40,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include <stdint.h>
 #include <sys/time.h>
@@ -63,6 +64,8 @@
 #define DEMUXDEVICE "/dev/dvb/adapter%d/demux%d"
 #define AUDIODEVICE "/dev/dvb/adapter%d/audio%d"
 
+int szap_break_tune = 0;
+
 static struct lnb_types_st lnb_type;
 
 struct diseqc_cmd {
@@ -73,20 +76,34 @@ struct diseqc_cmd {
 void diseqc_send_msg(int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
 		     fe_sec_tone_mode_t t, fe_sec_mini_cmd_t b)
 {
-   if (ioctl(fd, FE_SET_TONE, SEC_TONE_OFF) == -1)
-      perror("FE_SET_TONE failed");
-   if (ioctl(fd, FE_SET_VOLTAGE, v) == -1)
-      perror("FE_SET_VOLTAGE failed");
-   usleep(15 * 1000);
-   if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd) == -1)
-      perror("FE_DISEQC_SEND_MASTER_CMD failed");
-   usleep(cmd->wait * 1000);
-   usleep(15 * 1000);
-   if (ioctl(fd, FE_DISEQC_SEND_BURST, b) == -1)
-      perror("FE_DISEQC_SEND_BURST failed");
-   usleep(15 * 1000);
-   if (ioctl(fd, FE_SET_TONE, t) == -1)
-      perror("FE_SET_TONE failed");
+    if (ioctl(fd, FE_SET_TONE, SEC_TONE_OFF) == -1)
+    {
+        //perror("FE_SET_TONE failed");
+    }
+      
+    if (ioctl(fd, FE_SET_VOLTAGE, v) == -1)
+    {
+        //perror("FE_SET_VOLTAGE failed");
+    }
+    
+    usleep(15 * 1000);
+    if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd) == -1)
+    {
+        //perror("FE_DISEQC_SEND_MASTER_CMD failed");
+    }
+
+    usleep(cmd->wait * 1000);
+    usleep(15 * 1000);
+    if (ioctl(fd, FE_DISEQC_SEND_BURST, b) == -1)
+    {
+        //perror("FE_DISEQC_SEND_BURST failed");
+    }
+    
+    usleep(15 * 1000);
+    if (ioctl(fd, FE_SET_TONE, t) == -1)
+    {
+        //perror("FE_SET_TONE failed");
+    }
 }
 
 
@@ -130,30 +147,41 @@ static int do_tune(int fefd, unsigned int ifreq, unsigned int sr)
    tuneto.u.qpsk.fec_inner = FEC_AUTO;
 
    if (ioctl(fefd, FE_SET_FRONTEND, &tuneto) == -1) {
-      perror("FE_SET_FRONTEND failed");
+//      perror("FE_SET_FRONTEND failed");
       return FALSE;
    }
 
    return TRUE;
 }
 
+static void handleSigint()
+{
+    szap_break_tune = 1;
+}
 
 static
 int check_frontend (int fe_fd, int dvr, const int interval_us, StatusReceiver statusReceiver)
 {
     (void)dvr;
     fe_status_t status;
-    uint16_t snr, signal;
+    uint16_t snr, signal_strength;
     uint32_t ber, uncorrected_blocks;
     int is_locked;
 
-    while(1) {
+    // We use SIGINT out of convenience, for whether we're testing tuning by 
+    // handle, or need to interrupt it from another thread.
+    signal(SIGINT, handleSigint);
+
+	while(szap_break_tune == 0) {
         if (ioctl(fe_fd, FE_READ_STATUS, &status) == -1)
-            perror("FE_READ_STATUS failed");
+        {
+            //perror("FE_READ_STATUS failed");
+        }
+        
         /* some frontends might not support all these ioctls, thus we
          * avoid printing errors */
-        if (ioctl(fe_fd, FE_READ_SIGNAL_STRENGTH, &signal) == -1)
-            signal = -2;
+        if (ioctl(fe_fd, FE_READ_SIGNAL_STRENGTH, &signal_strength) == -1)
+            signal_strength = -2;
         if (ioctl(fe_fd, FE_READ_SNR, &snr) == -1)
             snr = -2;
         if(ioctl(fe_fd, FE_READ_BER, &ber) == -1)
@@ -163,7 +191,7 @@ int check_frontend (int fe_fd, int dvr, const int interval_us, StatusReceiver st
 
         is_locked = (status & FE_HAS_LOCK) > 0;
 
-		if(statusReceiver(status, signal, snr, ber, uncorrected_blocks, is_locked) == 0)
+		if(statusReceiver(status, signal_strength, snr, ber, uncorrected_blocks, is_locked) == 0)
             break;
 
 		usleep(interval_us);
@@ -190,35 +218,29 @@ int zap_to(t_tuner_descriptor tuner,
       snprintf(fedev, sizeof(fedev), FRONTENDDEVICE, tuner.adapter, tuner.frontend);
       snprintf(dmxdev, sizeof(dmxdev), DEMUXDEVICE, tuner.adapter, tuner.demux);
       snprintf(auddev, sizeof(auddev), AUDIODEVICE, tuner.adapter, tuner.demux);
-      printf("using '%s' and '%s'\n", fedev, dmxdev);
 
       if ((fefd = open(fedev, O_RDWR | O_NONBLOCK)) < 0) {
-	 perror("opening frontend failed");
 	 return FALSE;
       }
 
       result = ioctl(fefd, FE_GET_INFO, &fe_info);
 
       if (result < 0) {
-	 perror("ioctl FE_GET_INFO failed");
 	 close(fefd);
 	 return FALSE;
       }
 
       if (fe_info.type != FE_QPSK) {
-	 fprintf(stderr, "frontend device is not a QPSK (DVB-S) device!\n");
 	 close(fefd);
 	 return FALSE;
       }
 
       if ((dmxfdv = open(dmxdev, O_RDWR)) < 0) {
-	 perror("opening video demux failed");
 	 close(fefd);
 	 return FALSE;
       }
 
       if ((dmxfda = open(dmxdev, O_RDWR)) < 0) {
-	 perror("opening audio demux failed");
 	 close(fefd);
 	 return FALSE;
       }
@@ -228,7 +250,6 @@ int zap_to(t_tuner_descriptor tuner,
 
       if (rec_psi){
          if ((patfd = open(dmxdev, O_RDWR)) < 0) {
-	    perror("opening pat demux failed");
 	    close(audiofd);
 	    close(dmxfda);
 	    close(dmxfdv);
@@ -237,7 +258,6 @@ int zap_to(t_tuner_descriptor tuner,
          }
 
          if ((pmtfd = open(dmxdev, O_RDWR)) < 0) {
-	    perror("opening pmt demux failed");
 	    close(patfd);
 	    close(audiofd);
 	    close(dmxfda);
@@ -275,7 +295,7 @@ int zap_to(t_tuner_descriptor tuner,
 		     result = FALSE;
 		  }
 		  if (pmtpid == 0) {
-		     fprintf(stderr,"couldn't find pmt-pid for sid %04x\n",sid);
+		     //fprintf(stderr,"couldn't find pmt-pid for sid %04x\n",sid);
 		     result = FALSE;
 		  }
 		  if (set_pesfilter(patfd, 0, DMX_PES_OTHER, dvr))
