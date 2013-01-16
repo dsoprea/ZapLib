@@ -154,11 +154,6 @@ static int do_tune(int fefd, unsigned int ifreq, unsigned int sr)
    return TRUE;
 }
 
-static void handleSigint()
-{
-    szap_break_tune = 1;
-}
-
 static
 int check_frontend (int fe_fd, int dvr, const int interval_us, StatusReceiver statusReceiver)
 {
@@ -167,10 +162,6 @@ int check_frontend (int fe_fd, int dvr, const int interval_us, StatusReceiver st
     uint16_t snr, signal_strength;
     uint32_t ber, uncorrected_blocks;
     int is_locked;
-
-    // We use SIGINT out of convenience, for whether we're testing tuning by 
-    // handle, or need to interrupt it from another thread.
-    signal(SIGINT, handleSigint);
 
 	while(szap_break_tune == 0) {
         if (ioctl(fe_fd, FE_READ_STATUS, &status) == -1)
@@ -336,10 +327,19 @@ static int read_channels(t_tuner_descriptor tuner, t_dvbs_tune_info tune_info,
 }
 
 
+static void handleSigalarm()
+{
+    szap_break_tune = 1;
+}
+
 int szap_tune_silent(t_tuner_descriptor tuner, t_dvbs_tune_info tune_info, 
                      StatusReceiver statusReceiver, int audio_bypass, int dvr, 
                      unsigned int rec_psi, char *lnb_raw)
 {
+    // We use SIGALRM out of convenience, for whether we're testing tuning by 
+    // handle, or need to interrupt it from another thread.
+    signal(SIGALRM, handleSigalarm);
+
 	const int status_interval_us = 1000000;
 
     lnb_type = *lnb_enum(0);

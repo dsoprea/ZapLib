@@ -259,11 +259,6 @@ int setup_frontend (int fe_fd, struct dvb_frontend_parameters *frontend)
 	return 0;
 }
 
-static void handleSigint()
-{
-    tzap_break_tune = 1;
-}
-
 static
 int check_frontend(int fe_fd, const int interval_us, 
                    StatusReceiver statusReceiver)
@@ -272,10 +267,6 @@ int check_frontend(int fe_fd, const int interval_us,
     uint16_t snr, signal_strength;
     uint32_t ber, uncorrected_blocks;
     int is_locked;
-
-    // We use SIGINT out of convenience, for whether we're testing tuning by 
-    // handle, or need to interrupt it from another thread.
-    signal(SIGINT, handleSigint);
 
 	while(tzap_break_tune == 0) {
 	    ioctl(fe_fd, FE_READ_STATUS, &status);
@@ -296,10 +287,19 @@ int check_frontend(int fe_fd, const int interval_us,
 	return 0;
 }
 
+static void handleSigalarm()
+{
+    tzap_break_tune = 1;
+}
+
 int tzap_tune_silent(t_tuner_descriptor tuner, t_dvbt_tune_info tune_info, 
                      int dvr, unsigned int rec_psi, 
                      StatusReceiver statusReceiver)
 {
+    // We use SIGALRM out of convenience, for whether we're testing tuning by 
+    // handle, or need to interrupt it from another thread.
+    signal(SIGALRM, handleSigalarm);
+
 	const int status_interval_us = 1000000;
 
 	struct dvb_frontend_parameters frontend_param;
