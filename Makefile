@@ -19,7 +19,14 @@ ZAPLIB_SO_INSTALLPATH=$(INSTALL_PATH)/$(ZAPLIB_SO_NAME)
 CC=gcc
 CFLAGS=-g -Wall -Werror 
 
-all: $(OUTPUT_PATH)/$(ZAPLIB_SO_NAME)
+.PHONY: directories
+
+all: directories $(OUTPUT_PATH)/$(ZAPLIB_SO_NAME)
+
+directories: $(OUTPUT_PATH)
+
+$(OUTPUT_PATH):
+		mkdir -p $(OUTPUT_PATH)
 
 $(OUTPUT_PATH)/$(ZAPLIB_SO_NAME): $(OUTPUT_PATH)/azaplib.o $(OUTPUT_PATH)/czaplib.o \
 		$(OUTPUT_PATH)/szaplib.o $(OUTPUT_PATH)/lnb.o \
@@ -49,7 +56,7 @@ $(OUTPUT_PATH)/util.o: $(SRC_PATH)/util.c
 	$(CC) -c -fpic $(CFLAGS) -o $(OUTPUT_PATH)/util.o $(SRC_PATH)/util.c
 
 clean:
-	rm -fr $(OUTPUT_PATH)/* $(INSTALL_PATH)/$(ZAPLIB_SO_FILENAME)*
+	rm -fr $(OUTPUT_PATH) $(INSTALL_PATH)/$(ZAPLIB_SO_FILENAME)*
 
 install:
 	cp $(OUTPUT_PATH)/$(ZAPLIB_SO_NAME) $(INSTALL_PATH)
