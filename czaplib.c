@@ -70,6 +70,8 @@ static void handleSigalarm()
     czap_break_tune = 1;
 }
 
+// Tune a DVB-C device. The rec_psi argument indicates that PAT and PMT packets 
+// should come through (important if MPEGTS feed is to be readable by players).
 int czap_tune_silent(t_tuner_descriptor tuner, t_dvbc_tune_info tune_info, 
                      int dvr, int rec_psi, StatusReceiver statusReceiver)
 {

@@ -44,16 +44,23 @@ Licensing
 
 As I took this code from a LGPL project, I've made this project LGPL, as well.
 
+Install
+=======
+
+    ./configure
+    make
+    sudo make install
+
 Usage
 =====
 
-Do a make, and either dynamically link to zaplib.so, or statically link to one 
-of the following:
+    1) Dynamically link to zaplib.so
+    2) Statically link to one of the following:
 
-    azaplib.o
-    czaplib.o
-    szaplib.o (which also requires lnb.o)
-    tzaplib.o
+        azaplib.o
+        czaplib.o
+        szaplib.o (which also requires lnb.o)
+        tzaplib.o
 
 Comments
 ========

@@ -332,9 +332,12 @@ static void handleSigalarm()
     szap_break_tune = 1;
 }
 
+// Tune a DVB-S device. The rec_psi argument indicates that PAT and PMT packets 
+// should come through (important if MPEGTS feed is to be readable by players).
 int szap_tune_silent(t_tuner_descriptor tuner, t_dvbs_tune_info tune_info, 
-                     StatusReceiver statusReceiver, int audio_bypass, int dvr, 
-                     unsigned int rec_psi, char *lnb_raw)
+                     int dvr, unsigned int rec_psi, 
+                     StatusReceiver statusReceiver, int audio_bypass, 
+                     char *lnb_raw)
 {
     // We use SIGALRM out of convenience, for whether we're testing tuning by 
     // handle, or need to interrupt it from another thread.

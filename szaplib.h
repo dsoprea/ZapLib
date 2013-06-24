@@ -15,8 +15,9 @@ typedef struct
 } t_dvbs_tune_info;
 
 extern int szap_tune_silent(t_tuner_descriptor tuner, 
-                            t_dvbs_tune_info tune_info, 
+                            t_dvbs_tune_info tune_info, int dvr, 
+                            unsigned int rec_psi, 
                             StatusReceiver statusReceiver, int audio_bypass, 
-                            int dvr, unsigned int rec_psi, char *lnb_raw);
+                            char *lnb_raw);
 
 #endif

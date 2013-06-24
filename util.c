@@ -33,6 +33,7 @@
 #include <linux/dvb/dmx.h>
 
 
+// Allow traffic for a certain PID to come through.
 int set_pesfilter(int dmxfd, int pid, int pes_type, int dvr)
 {
     struct dmx_pes_filter_params pesfilter;
