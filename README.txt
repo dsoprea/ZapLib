@@ -39,11 +39,6 @@ Goals
   requiring a tuning library), and recording is simply a matter of reading from
   the dvb<n> device and writing to a file, I yanked this functionality.
 
-Licensing
-=========
-
-As I took this code from a LGPL project, I've made this project LGPL, as well.
-
 Install
 =======
 
